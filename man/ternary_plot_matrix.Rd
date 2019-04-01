@@ -11,7 +11,7 @@ ternary_plot_matrix(data_matrix, data_meta, three_points)
 
 \item{data_meta}{a dataframe with sample-group matching}
 
-\item{three_points}{could be "top3",or a vector of row index, or a vector of row names. If vector, the length must be 3.}
+\item{three_points}{could be "top3",or a vector of row index, or a vector of row names. If vector, the length must be 3. see examples}
 }
 \value{
 a data.frame of matrix_selected and ggplot2 object of ternary.plot
@@ -37,6 +37,8 @@ t <- ternary_plot_matrix(data_matrix = matrix_test, data_meta = meta_test, three
 t$ternary.plot
 t <- ternary_plot_matrix(data_matrix = matrix_test, data_meta = meta_test, three_points = c(2,4,5))
 t$ternary.plot
+
+
 }
 \seealso{
 \code{\link{ggtern}}

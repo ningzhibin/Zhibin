@@ -27,7 +27,7 @@ Imports:
   roxygen2,
   glue, 
   Rcpp,
-  Reshap2,
+  reshape2,
   MASS,
   magrittr,
-  tydiverse
+  tidyverse
