@@ -1,7 +1,7 @@
 ---
 title: "Data Exploreation on visualization"
 author: "ningzhibinn@gmail.com"
-date: "March 09, 2019"
+date: "`r Sys.time()`"
 output:
   html_document:
     fig_width: 10

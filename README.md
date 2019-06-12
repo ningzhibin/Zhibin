@@ -1,4 +1,4 @@
-# Zhibin
-R personal package
-to prepare and easy eccosystem for develoment
- edit on local side
+# metalab
+metalab accompaning functions for metaproteomics data analysis
+
+

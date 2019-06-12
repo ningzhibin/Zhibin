@@ -1,5 +1,5 @@
-Package: Zhibin
-Title: Zhibin's personal package of handy self-made functions 
+Package: metalab
+Title: metalab accompaning functions for metaproteomics data analysis
 Version: 0.0.1
 Authors@R: 
     person(given = "Zhibin",
