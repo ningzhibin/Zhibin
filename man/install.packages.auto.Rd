@@ -20,6 +20,7 @@ It also does not need quote on the package name.
 \details{
 This function is just for quick and easy install and library usage. It does not consider installation from github yet.
 If the pacakge has already been installed, no installation will be proceeded.
+With R version 3.5 or greater, Bioconductor packages installing start using BiocManager. Therefore this comand only woorks for biocondcutior for R 3.5 or greater
 }
 \examples{
 install.packages.auto(roxygen2) # from CRAN

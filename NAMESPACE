@@ -3,4 +3,5 @@
 export(find_lipid_combo)
 export(install.packages.auto)
 export(prcomp_opencpu_csv)
+export(rmdtext)
 export(ternary_plot_matrix)

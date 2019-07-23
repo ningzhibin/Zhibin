@@ -6,6 +6,7 @@
 #'
 #' This function is just for quick and easy install and library usage. It does not consider installation from github yet.
 #' If the pacakge has already been installed, no installation will be proceeded.
+#' With R version 3.5 or greater, Bioconductor packages installing start using BiocManager. Therefore this comand only woorks for biocondcutior for R 3.5 or greater
 #'
 #' @param x package name, with or without the quote both works
 #'
@@ -39,9 +40,15 @@ install.packages.auto <- function(x) {
   if(isTRUE(x %in% .packages(all.available=TRUE))) {
     eval(parse(text = sprintf("require(\"%s\")", x)))
   } else {
-    source("http://bioconductor.org/biocLite.R")
-    biocLite(character(), ask=FALSE) #update installed packages.
-    eval(parse(text = sprintf("biocLite(\"%s\")", x)))
+    #source("http://bioconductor.org/biocLite.R")
+    #With R version 3.5 or greater, install Bioconductor packages using BiocManager;
+    if (!requireNamespace("BiocManager", quietly = TRUE))
+      install.packages("BiocManager")
+
+    BiocManager::install("clusterProfiler")
+
+    #biocLite(character(), ask=FALSE) #update installed packages.
+    eval(parse(text = sprintf("BiocManager::install(\"%s\")", x)))
     eval(parse(text = sprintf("require(\"%s\")", x)))
   }
 }
