@@ -17,7 +17,7 @@ To generate random draws from a normal distribution we use the **rnorm** functio
 
 ```{r block1}
 
-output <- rnorm(1000, 100, 15)
+output <- rnorm(1000, 50, 15)
 
 ```
 
