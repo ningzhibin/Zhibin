@@ -21,7 +21,9 @@
 #' r <- find_lipid_combo(combo_target,c("18:1", "bbb", "17:1", "17:2") ) #notworking, can run, but result is not right
 
 
+
 #' @export
+#'
 
 find_lipid_combo <- function(combo_target,chains_observed){
 
