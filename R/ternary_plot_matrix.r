@@ -6,7 +6,7 @@
 #'
 #' @param data_matrix a two dimentional data matrix, with rows as annation/function/taxon, while columns are samples
 #' @param data_meta a dataframe with sample-group matching
-#' @param three_points could be "top3",or a vector of row index, or a vector of row names. If vector, the length must be 3. see examples
+#' @param three_points could be "top3", or a vector of row index, or a vector of row names. If vector, the length must be 3. see examples
 #'
 #' @return a data.frame of matrix_selected and ggplot2 object of ternary.plot
 #'
@@ -74,3 +74,34 @@ ternary_plot_matrix <- function(data_matrix, data_meta, three_points){
   ))
 
 }
+
+
+
+
+# ternary_plot <- function(data_matrix, data_meta, three_points){
+#
+#   install.packages.auto(ggtern)
+#
+#   select_3 <- as.data.frame(t(data_matrix[which(rownames(data_matrix) %in% three_points),]))
+#   #select_3 <- as.data.frame(scale(select_3), scale = FALSE) # rescore
+#
+#   index <- match(rownames(select_3), data_meta[,1])
+#   data_meta_Reorder <- data_meta[index,]
+#
+#   select_3[,4] <- data_meta_Reorder[,2]
+#   #select_3_hits[,5] <- data_meta_Reorder[,1]
+#
+#
+#   colnames(select_3)<-c("x","y","z", "Group")
+#   p<- ggtern(data=select_3,aes(x,y,z,color=Group)) +geom_point() +labs(x=three_points[1],y=three_points[2],z=three_points[3],title="Ternary Plot")
+#
+#
+#
+#   return(list(ternary.plot = p,
+#               matrix_selected = select_3
+#   ))
+#
+# }
+
+
+

@@ -1,254 +1,8 @@
 
 
 
-set.seed(1981)
 
-# example:
-# data preparation
 
-matrix_test1 <- matrix(runif(2000), nrow = 200)
-matrix_test2 <- matrix(runif(2000)+ runif(200), nrow = 200)
-matrix_test3 <- matrix(runif(2000)+ 2*runif(200), nrow = 200)
-
-matrix_test <- cbind(matrix_test1,matrix_test2, matrix_test3)
-
-rownames(matrix_test) <- paste("COG", 1:200, sep = "_")
-colnames(matrix_test) <- paste("sample", 1:30, sep = "_")
-
-factor_test <- c(rep("A",10),rep("B",10),rep("C",10))
-meta_test <- data.frame(samplename = colnames(matrix_test), grouping = factor_test)
-
-# Randomize the order
-meta_test <- meta_test[sample(1:nrow(meta_test)),]
-rownames(meta_test) <- NULL
-
-
-
-# basic_plotting ----------------------------------------------------------
-
-
-# do a simple row plot according to the grouping information
-# plot_type = "violin" or "box"
-
-# example:
-#   matrix_test <- matrix(rnorm(2000), nrow = 20)
-#   factor_test <- sample(LETTERS[1:3], 100, replace = TRUE)
-#   meta_test <- data.frame(samplename = colnames(matrix_test), grouping = factor_test)
-
-# run: plot single row
-#   matrix_boxplot_byrow_bygroup(row = 1, data_matrix = matrix_test, data_meta = meta_test, plot_type = "violin")
-# run: all rows, result into a list
-# plot_all_rows <- lapply(1:nrow(matrix_test), matrix_boxplot_byrow_bygroup, data = matrix_test, data_meta = meta_test)
-
-
-
-
-
-matrix_boxplot_byrow_bygroup <- function(row = 1,data_matrix, data_meta, plot_type = "violin"){
-
-  # reorder the meta
-  data_meta <- data_meta[match(colnames(data_matrix), data_meta[,1]),]
-
-  # check the seqeunce
-  if(!all(colnames(data_matrix) ==  data_meta[,1])){stop("unmatched")}
-
-  if(is.numeric(row)){
-    index <- row
-    if(index > nrow(data_matrix) | index <=0) stop("row number is out of range (numer of column number), please input the right one")
-
-  }else if(is.character(row)){
-    index <- match(row, colnames(data_matrix_tranverse))
-    if(is.na(index)) stop("item_name Not found, please input the right one")
-  }
-
-  # plot single here
-  # generate a simple database
-
-  tile = rownames(data_matrix)[index]
-  plot <- simple_ggboxplot_vector(vector = data_matrix[index,], factor = data_meta[,2], plot_type = plot_type, title = tile)
-  return(plot)
-}
-
-
-
-# this function does a very simple box or violin plot using give vector values and grouping information
-# vector and factor have to be the corresponding
-
-# example:
-# vector_test <- rnorm(200)
-# factor_test <- sample(LETTERS[1:3], 200, replace = TRUE)
-# simple_ggboxplot_vector(vector_test, factor_test)
-# simple_ggboxplot_vector(vector = vector_test, factor = factor_test, plot_type = "box", title = "test")
-
-
-simple_ggboxplot_vector <- function(vector = NULL, factor = NULL, plot_type = "violin", title = ""){
-  install.packages.auto(ggplot2)
-  if(is.null(vector) | is.null(factor)){
-    stop("Neither \"vector\"  or \"factor\" has default values, please define")
-  }else{
-    data_df <- data.frame(groups = as.factor(factor), Values = vector)
-    p <- ggplot(data_df,aes_string("groups","Values",fill="groups"))
-
-    if (plot_type == "violin"){
-      p1 <- p+geom_violin() + ggtitle(title) + theme(plot.title = element_text(hjust = 0.5))
-    } else if (plot_type == "box"){
-      p1 <- p+geom_boxplot(alpha=0.3, width=0.9) + geom_jitter(shape=21) + ggtitle(title) + theme(plot.title = element_text(hjust = 0.5))
-    }
-    return(plot = p1)
-  }
-}
-
-
-
-
-# this function is the smart way to do plot by columns, and combine the plot output into a list,
-# this is very easy to store a good number of plot at a time
-# usage
-#  generate a test data frame
-#   data_test <- data.frame(rnorm(200), nrow = 10)
-# using a list apply to iterate
-#   myplots <- lapply(colnames(data_test), plot_df_bycolumn_into_list, data = data_test)
-
-
-plot_df_bycolumn_into_list = function (data, column){
-
-  ggplot(data = data, aes_string(x = column)) +
-    geom_density(fill = "lightgreen") + xlab(column)
-
-}
-
-# the plot function could be changed into any type
-
-
-
-
-# http://peterhaschke.com/Code/multiplot.R
-
-multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
-  require(grid)
-
-  plots <- c(list(...), plotlist)
-
-  numPlots = length(plots)
-
-  if (is.null(layout)) {
-    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-                     ncol = cols, nrow = ceiling(numPlots/cols))
-  }
-
-  if (numPlots==1) {
-    print(plots[[1]])
-
-  } else {
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-
-    for (i in 1:numPlots) {
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
-    }
-  }
-}
-
-
-# accept data.frame with the follwing columns
-#  "FunctionName"    "Number_in_group" "Number_matched"  "pvalue"          "pvalue_adjusted"
-# plot a graph out directly
-
-#p1 <- barplot_enrichemt(df.match = matched_categories,top20 = "FALSE")
-
-# for plot of topN
-#p2 <- barplot_enrichemt(df.match = matched_categories,top20 = "TRUE")
-
-
-
-barplot_enrichemt <- function(df.match, title.tag = NULL, top20 = "TRUE"){
-
-  df.match[which(df.match$pvalue_adjusted == 0),5] <- NA
-  df.match[which(is.na(df.match$pvalue_adjusted)),5] <- min(df.match$pvalue_adjusted, na.rm = TRUE)
-
-  postscript("temp")
-  dev.control('enable')
-
-  if( top20 == "TRUE") {
-
-    if(nrow(df.match) > 20){
-      df.match <- df.match[1:20,]
-    }
-
-    par(mar = c(5,20,8,5),mgp=c(2,0.3,0.5),tck=-.01,cex.axis = 0.8)
-    m <- df.match$Number_matched
-    names(m) <-df.match$FunctionName
-    barplot(rev(m),cex.names = 0.8,font.axis = 3,axes=F,border = NA,las =1,
-            horiz = T,xlim = c(0, 1.2*max(m)), main = paste(title.tag, " Enrichment Analysis", sep = "") )
-    z<-seq(0, ceiling(max(m)), by = ceiling(max(m))/4)
-    axis(side = 1,at = z,col="grey",line = -0.5)
-
-    par(new = T)
-    p_for_plot <- -log10(df.match$pvalue_adjusted)
-
-    plot(rev(p_for_plot),1:length(p_for_plot),type="l",lwd = 2,col="red",axes=F,xlab=NA,ylab=NA,xlim = c(0, ceiling(max(p_for_plot))))
-    abline(v = -log10(0.01),lwd = 1, col="red" ,lty = "dotted" )
-    z<-seq(0, ceiling(max(p_for_plot)), by = ceiling(max(p_for_plot))/4)
-    axis(side = 3,at = z,col="red",line = -0.5, col.axis = 'red')
-    mtext(side = 3, line = 1.2,cex= 0.9, col="red",expression(-log[10](italic(p.adjusted))))
-
-
-  }else if (top20 == "FALSE"){
-
-    par(mar = c(5,5,8,5),mgp=c(2,0.3,0.5),tck=-.01,cex.axis = 0.8)
-    m <- df.match$Number_matched
-    names(m) <-df.match$FunctionName
-    barplot(rev(m),yaxt = "n",cex.names = 0.8,font.axis = 3,axes=F,border = NA,las =1,
-            horiz = T,xlim = c(0, 1.2*max(m)), main = paste(title.tag, " Enrichment Analysis", sep = "") )
-    z<-seq(0, ceiling(max(m)), by = ceiling(max(m))/4)
-    axis(side = 1,at = z,col="grey",line = -0.5)
-
-    par(new = T)
-    p_for_plot <- -log10(df.match$pvalue_adjusted)
-
-    plot(rev(p_for_plot),1:length(p_for_plot),type="l",lwd = 2,col="red",axes=F,xlab=NA,ylab=NA,xlim = c(0, ceiling(max(p_for_plot))))
-    abline(v = -log10(0.01),lwd = 1, col="red" ,lty = "dotted" )
-    z<-seq(0, ceiling(max(p_for_plot)), by = ceiling(max(p_for_plot))/4)
-    axis(side = 3,at = z,col="red",line = -0.5, col.axis = 'red')
-    mtext(side = 3, line = 1.2,cex= 0.9, col="red",expression(-log[10](italic(p.adjusted))))
-
-  }
-
-  EA.plot <- recordPlot()
-  dev.off()
-  return(EA.plot)
-}
-
-
-
-
-ternary_plot <- function(data_matrix, data_meta, three_points){
-
-  install.packages.auto(ggtern)
-
-  select_3 <- as.data.frame(t(data_matrix[which(rownames(data_matrix) %in% three_points),]))
-  #select_3 <- as.data.frame(scale(select_3), scale = FALSE) # rescore
-
-  index <- match(rownames(select_3), data_meta[,1])
-  data_meta_Reorder <- data_meta[index,]
-
-  select_3[,4] <- data_meta_Reorder[,2]
-  #select_3_hits[,5] <- data_meta_Reorder[,1]
-
-
-  colnames(select_3)<-c("x","y","z", "Group")
-  p<- ggtern(data=select_3,aes(x,y,z,color=Group)) +geom_point() +labs(x=three_points[1],y=three_points[2],z=three_points[3],title="Ternary Plot")
-
-
-
-  return(list(ternary.plot = p,
-              matrix_selected = select_3
-  ))
-
-}
 
 
 
@@ -297,6 +51,7 @@ install.packages.auto("RColorBrewer")
 # if succeed in writing, return "1";
 
 
+
 output_SVG_png <- function(path = "./plots/", filename_tag, graph, width = 10, height = 8){
 
   install.packages.auto(svglite) # the svg driver, letting R outpuf figure as avg format
@@ -324,6 +79,9 @@ output_SVG_png_plotlist <- function(path = "./plots/", plotlist, prefix = NULL){
     try(output_SVG_png(path = path, filename_tag = paste(prefix, file_NamesTags[i], sep = "_"), graph = plotlist[[i]]), silent = TRUE)
   }
 }
+
+
+
 
 #________________________________________________________________________________________
 #     PCA_plot
@@ -432,81 +190,10 @@ PCA_plot_with_ellipse_kmeans <- function(data_matrix, grouping){
 
 }
 
-PCA_plot_with_ellipse_kmeans_2 <- function(prcomp_out, grouping){
-  suppressMessages(install.packages.auto(ggplot2))
-
-  scores <- prcomp_out$x                       # scores for first three PC's
-  number_of_groups <- length(levels(as.factor(grouping[,2])))
-  km  <- kmeans(scores, centers=number_of_groups, nstart=5)
-
-  #ggdata <- data.frame(scores, Cluster=km$cluster, Groups=grouping)
-  ggdata <- data.frame(scores, Cluster=km$cluster)
-
-  p<- ggplot(ggdata) +
-    geom_point(aes(x=PC1, y=PC2, colour=factor(Cluster)), size=3, shape=20) +
-    geom_text(aes(x=PC1, y=PC2, color=factor(Cluster),label=rownames(ggdata)))+
-    stat_ellipse(aes(x=PC1,y=PC2,fill=factor(Cluster)), geom="polygon", level=0.95, alpha=0.2) +
-    guides(color=guide_legend("Cluster"),fill=guide_legend("Cluster"))+
-    theme_bw()+theme(plot.title = element_text(hjust = 0.5))
-
-
-  p<-p+labs(title = "PCA Clustering")+ theme_bw()+theme(plot.title = element_text(hjust = 0.5))
-
-  return(p)
-
-}
 
 
 
 
-PCA_plot_with_confidence_2 <- function(prcomp_out, data_meta){
-  suppressMessages(install.packages.auto(ggplot2))
-
-  loadings <- as.data.frame(prcomp_out$x)                       # scores for first three PC's
-
-  # reorder the meta (grouping information)
-  data_meta <- data_meta[match(rownames(loadings), data_meta[,1]),]
-
-  loadings$groups <- data_meta[,2]
-
-  p<- ggplot(loadings, aes(PC1, PC2, color = groups)) +
-    geom_point() +
-    stat_ellipse(type = "norm", linetype = 2, level = 0.95)
-  # confidence level =0.95 for normal distribution
-  # see for more details: https://ropensci.github.io/plotly/ggplot2/stat_ellipse.html
-  p<-p+labs(title = "PCA Clustering")+ theme_bw()+theme(plot.title = element_text(hjust = 0.5))
-
-  return(p)
-
-}
-
-
-#________________________________________________________________________________________
-
-#     PCA_plot_3d_interactive
-#________________________________________________________________________________________
-
-# ___Description___:
-# interactive 3d plot of the pca result
-# using 3d function of plotly
-
-
-# ___Arguments___:
-#
-# grouping information is used just for plotting, if not given, there will be no grouping plot on the figure
-# grouping information is required to be in a data.frame, with one column named as sample.name, one colum named as Groups
-
-#____Usage____;
-
-# PCA_plot_3d_interactive(data_matrix, grouping)$pca.plot
-
-# ___Values___:
-# a general objective of plotly
-#
-
-#colnames(meta_test) <- c("Sample.Name", "Groups")
-
-#PCA_plot_3d_interactive(data_matrix = matrix_test, grouping = meta_test )
 
 PCA_plot_3d_interactive_1<-function(data_matrix, grouping){
   suppressMessages(install.packages.auto(plotly))
@@ -550,101 +237,7 @@ PCA_plot_3d_interactive_2<-function(data_matrix, grouping){
   return(p1)
 }
 
-PCA_plot_3d_interactive_3<-function(prcomp_out, grouping){
-  suppressMessages(install.packages.auto(plotly))
 
-  loading <- as.data.frame(prcomp_out$x)
-  # reorder the meta (grouping information)
-  grouping <- grouping[match(rownames(loading), grouping[,1]),]
-
-  loading$Sample.Name <- rownames(loading)
-  loading$Groups <- grouping[,2]
-
-  #loading_merge <- as.data.frame(merge(grouping, loading, by.y=0, by.x = "Sample.Name"))
-  #row.names(loading_merge)<-loading_merge$Sample.Name
-
-  p1 <- plot_ly(loading, x = ~PC1, y = ~PC2, z = ~PC3, color = grouping[,2], colors = c('#BF382A', '#0C4B8E', "#1ABC9C")) %>%
-    add_markers() %>%
-    #add_text(loading_merge, x = ~PC1, y = ~PC2, z = ~PC3,text = ~Sample.Name) %>%
-    add_text(text = grouping[,1]) %>%
-    layout(scene = list(xaxis = list(title = 'PC1'),
-                        yaxis = list(title = 'PC2'),
-                        zaxis = list(title = 'PC3')))
-
-  return(p1)
-}
-
-
-
-#________________________________________________________________________________________
-
-#     PCA_Screeplot
-#     PCA_Screeplot_2
-#
-#________________________________________________________________________________________
-
-# ___Description___:
-# plot PCA screeplot, which shows how much of variance of each Principal Component explains
-# a good pca needs the firt 2/3 components explains most of the varaiance, otherwise, the separtaion is not good
-# the pca analysis was done by prcomp
-# an alternative is to to use a function of recordPlot to record the last plot as an object, which can be replotted after, where it was invoked. A list of plots can be returned by this way
-# a better alternative is to use ggplot2, where all plots are objects
-
-# ___Arguments___:
-# PCA_Screeplot: data matrix as input
-# PCA_Screeplot_@: the output of prcomp as input. in case you have already finished the pca analysis
-
-#____Usage____;
-# PCA_Screeplot(data_matrix)
-# PCA_Screeplot_2(prcomp.out)
-
-# ___Values___:
-# plot a scree plot
-#
-
-PCA_Screeplot<-function(data_matrix){
-  suppressMessages(install.packages.auto(ggplot2))
-  pca.output <- prcomp(t(data_matrix), scale.=TRUE, center = TRUE)
-  sd <- pca.output$sdev
-  scores <- pca.output$x
-  var <- sd^2
-  var.percent <- var/sum(var) * 100
-
-  #barplot(var.percent, xlab="Principal Component", ylab="Percent of Variance", names.arg=1:length(var.percent), las=1, ylim=c(0,max(var.percent)), col="gray", main="Percent of Variance")
-  #abline(h=1/nrow(pca.output$rotation)*100, col="red")
-  #p1 <- recordPlot()
-
-  p1<-ggplot()+geom_bar(aes(x=c(1:length(var.percent)),y=var.percent), stat="identity")
-  p1<-p1+geom_hline(yintercept = 1/nrow(pca.output$rotation)*100, colour = "red")
-  p1<-p1+labs(x = "Princaple Component Number",y="Percent of Variance",title = "Screeplot of Variance")
-  p1<-p1+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
-
-  return(list(Scree.plot = p1))
-}
-
-
-# accept pca result from prcomp
-PCA_Screeplot_2<-function(prcomp_out){
-  suppressMessages(install.packages.auto(ggplot2))
-  # get the values
-  sd <- prcomp_out$sdev
-  scores <- prcomp_out$x
-
-  var <- sd^2
-  var.percent <- var/sum(var) * 100
-
-  #barplot(var.percent, xlab="Principal Component", ylab="Percent of Variance", names.arg=1:length(var.percent), las=1, ylim=c(0,max(var.percent)), col="gray", main="Percent of Variance")
-  #abline(h=1/nrow(pca.output$rotation)*100, col="red")
-  #p1 <- recordPlot()
-
-  p1<-ggplot()+geom_bar(aes(x=c(1:length(var.percent)),y=var.percent), stat="identity")
-  p1<-p1+geom_hline(yintercept = 1/nrow(prcomp_out$rotation)*100, colour = "red")
-  p1<-p1+labs(x = "Princaple Component Number",y="Percent of Variance",title = "Screeplot of Variance")
-  p1<-p1+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
-
-
-  return(list(Scree.plot = p1))
-}
 
 
 
@@ -787,7 +380,7 @@ correlation_matrix_plot <- function(data_matrix, order_type = "hclust", plot_typ
 # plot by: boxplot_ressult$boxplot, boxplot_ressult$violinplot
 
 # ___Values___:
-# a list of plot, the first object $boxplot, second one is $violinplot
+# a list of plot, the first object boxplot, second one is violinplot
 
 
 
@@ -808,10 +401,139 @@ matrix_ggboxplot<-function(data_matrix, xlabel="Samples", ylabel = "Value", main
 }
 
 
+#________________________________________________________________________________________
+#     matrix_quick_heatmap
+#________________________________________________________________________________________
+
+# bug fixed
+# 20191002 add a line to replace the infinite values, heatmap.2 can deal with NA, but not infinte values
+
+
+matrix_quick_heatmap <- function(matrix,
+                                 scale = "row",
+                                 col_groupcolor_factor = NULL ,
+                                 row_groupcolor_factor = NULL,
+                                 Col_tree = TRUE){
+
+  install.packages.auto(gplots)
+
+  matrix[is.infinite(matrix)] <- NA # in case there is infinite values
+
+  svg(tempfile(),onefile = TRUE)
+  dev.control('enable')
+
+  if(is.null(row_groupcolor_factor) & is.null(col_groupcolor_factor)){
+    # if no grouping information provided
+    if(Col_tree){
+      heatmap.2(matrix, col=bluered, trace = "none",
+                scale = scale,
+                keysize = 1.5,
+                density.info = "none",
+                key.title  = "",
+                key.xlab = "",
+                key.ylab = "")
+    }else{
+      heatmap.2(matrix, col=bluered, trace = "none",
+                scale = scale,
+                keysize = 1.5,
+                density.info = "none",
+                Colv  = FALSE,
+                dendrogram = "row",
+                key.title  = "",
+                key.xlab = "",
+                key.ylab = "")
+    }
+
+
+
+  }else if((length(col_groupcolor_factor) > 0) & is.null(row_groupcolor_factor)){
+    # if only colum grouping information provided
+
+    col_groupcolor_factor <- col_groupcolor_factor[order(col_groupcolor_factor[,2]),]
+    matrix<- matrix[,match(col_groupcolor_factor[,1],colnames(matrix))]
+
+    color_labeling <- factor(col_groupcolor_factor[,2]) # removing unused factors
+    levels(color_labeling) <- rainbow(length(levels(color_labeling))) # rename the
+    color_labeling <- as.vector(color_labeling)
+    if(Col_tree){
+
+      heatmap.2(matrix,
+                col=bluered,
+                ColSideColors = color_labeling,
+                trace = "none",
+                scale = scale,
+                keysize = 1.5,
+                density.info = "none",
+                key.title  = "",
+                key.xlab = "",
+                key.ylab = "")
+
+
+    }else{
+      heatmap.2(matrix,
+                col=bluered,
+                ColSideColors = color_labeling,
+                trace = "none",
+                scale = scale,
+                Colv  = FALSE,
+                dendrogram = "row",
+                keysize = 1.5,
+                density.info = "none",
+                key.title  = "",
+                key.xlab = "",
+                key.ylab = ""
+      )
+    }
+
+  }else if((length(row_groupcolor_factor) > 0) & is.null(col_groupcolor_factor)){
+    # if only row grouping information provided
+
+    row_groupcolor_factor <- row_groupcolor_factor[match(rownames(matrix), row_groupcolor_factor[,1]),]
+
+    row_groupcolor_factor <- row_groupcolor_factor[order(row_groupcolor_factor[,2]),]
+    matrix<- matrix[match(row_groupcolor_factor[,1],rownames(matrix)),]
+
+    color_labeling <- factor(row_groupcolor_factor) # removing unused factors
+    levels(color_labeling) <- rainbow(length(levels(color_labeling))) # rename the
+    color_labeling <- as.vector(color_labeling)
+    if(Col_tree){
+      heatmap.2(matrix,
+                col=bluered,
+                ColSideColors = color_labeling,
+                trace = "none",
+                scale = scale,
+                keysize = 1.5,
+                density.info = "none",
+                key.title  = "",
+                key.xlab = "",
+                key.ylab = "" )
+
+    }else{
+      heatmap.2(matrix,
+                col=bluered,
+                ColSideColors = color_labeling,
+                trace = "none",
+                scale = scale,
+                Colv  = FALSE,
+                dendrogram = "row",
+                keysize = 1.5,
+                density.info = "none",
+                key.title  = "",
+                key.xlab = "",
+                key.ylab = ""
+      )
+    }
+  }
+  p1 <- recordPlot()
+  dev.off()
+  return(p1)
+}
+
+
 
 
 # visualize the datamatrix institutively
-matrix_display <- function(matrix,method="square",...){
+matrix_display <- function(matrix,method="square",title.tag = "Display", ...){
 
   suppressMessages(install.packages.auto(corrplot))
 
@@ -859,6 +581,17 @@ matrix_ttest<-function(data,group_info,group_name1,group_name2) {
 }
 
 
+#similarly
+matrix_fold_change<-function(data,group_info,group_name1,group_name2) {
+  group1<-which(group_info==group_name1)
+  group2<-which(group_info==group_name2)
+
+  fold_change<-apply(data,1,function(x) sum(x[group1])/sum(x[group2]))
+
+  return(fold_change)
+}
+
+
 #________________________________________________________________________________________
 #     subfunction
 #     PostHoc
@@ -870,14 +603,15 @@ matrix_ttest<-function(data,group_info,group_name1,group_name2) {
 # imputL a vector and grouping/factor information
 # output: significantly different pairs and corresponding p-values, return NA if no significance found
 
-PostHoc<-function(vector, factor){
-  p.value_anova<-anova(lm(as.numeric(vector)~as.factor(factor)))$Pr[1]
-  if(p.value_anova<0.05){
-    p_PostHoc_matrix<-pairwise.t.test(as.numeric(vector),as.factor(factor),p.adj = "fdr")$p.value
-    p_PostHoc_pairs<-find_p_location(p_PostHoc_matrix, p_threshold=0.05) # find_p_location is the self define functions
-    return(p_PostHoc_pairs)
+PostHoc<-function(vector, factor, p_threshold = 0.05){
+  p.value_anova <- anova(lm(as.numeric(vector)~as.factor(factor)))$Pr[1]
+  if(p.value_anova < 0.05){
+    p_PostHoc_matrix <- pairwise.t.test(as.numeric(vector),as.factor(factor),p.adj = "fdr")$p.value
+    p_PostHoc_pairs <- find_p_location(p_PostHoc_matrix, p_threshold = p_threshold) # find_p_location is the self define functions
+    #return(p_PostHoc_pairs)
+    return(paste0("ANOVA p=",p.value_anova,"; ",p_PostHoc_pairs))
   }else{
-    return("NO_significant_pairs")
+    return(NA)
   }
 }
 
@@ -893,7 +627,7 @@ PostHoc<-function(vector, factor){
 
 matrix_PostHoc<-function(data,groups) {
   p_PostHoc_pairs<-apply(data,1,PostHoc,factor=groups) # this is a good example how to apply second parometer to "apply" functions
-  return(p_PostHoc_pairs)                             # PostHoc is self defined functions
+  return(as.data.frame(p_PostHoc_pairs))                            # PostHoc is self defined functions
 }
 
 
@@ -926,19 +660,19 @@ matrix_PostHoc2<-function(data,groups) {
 # threshold is 0.05 by default, can be changed to 0.01
 
 find_p_location<-function(p_matrix, p_threshold=0.05){
-  which(p_matrix<p_threshold,arr.ind=TRUE)->xx
-  if(length(xx)>0){ # only perform the picking up if there is any significant one
-    ALL_significant_pairs<-NULL
+  xx <- which(p_matrix < p_threshold,arr.ind=TRUE)
+  if(length(xx) > 0){ # only perform the picking up if there is any significant one
+    ALL_significant_pairs <- NULL
     for(i in 1:nrow(xx)){
       #group1 name/dimention1 name:rownames(xx)[i]
       #group2 name/dimention2 name:colnames(p_matrix)[xx[i,2]]
       #p value: p_matrix[xx[i,1],xx[i,2]]
-      significant_pair<-paste(rownames(xx)[i],colnames(p_matrix)[xx[i,2]],p_matrix[xx[i,1],xx[i,2]], sep="/")
-      ALL_significant_pairs<-paste(ALL_significant_pairs,significant_pair, spe="||")
+      significant_pair <- paste0(p_matrix[xx[i,1],xx[i,2]],"(",rownames(xx)[i],"~",colnames(p_matrix)[xx[i,2]],"); ")
+      ALL_significant_pairs <- paste0(ALL_significant_pairs,significant_pair)
     }
     return(ALL_significant_pairs)
   }else{
-    return("Inconsistent betwen p values  ANOVA and paired t.test")
+    return("Failed in locating pairs by t.test")
     # to pick up the significant pairs after posthoc analysis after anova
     # sometimes using different p.adjust method for anova  and ttest
     # therefore it's marked here if there is any inconcistency
@@ -955,13 +689,16 @@ find_p_location<-function(p_matrix, p_threshold=0.05){
 
 # will do sequential KNN using rrcovNA::impSeqRob
 
+# data_meta is a data.frame with two columns of sample and grouping
+# ncomp: number of component to keep, it cannot be larger than the smaller dimention
+# Q is the strengh of imputation
 
-PCA_wrapper_mixOmics <- function(data_matrix = NULL, data_meta = NULL, inputation = TRUE, Q = 0.75, ...){
+PCA_wrapper_mixOmics <- function(data_matrix = NULL, data_meta = NULL, ncomp = 10, inputation = TRUE, Q = 0.75, ...){
   suppressMessages(install.packages.auto(mixOmics))
 
 
   # reorder the meta (grouping information)
-  data_meta <- data_meta[match(colnames(data_matrix), data_meta[,1]),]
+  data_meta <- data_meta[match(colnames(data_matrix), as.data.frame(data_meta)[,1]),]
 
   # check the order
   if(any(colnames(data_matrix) !=  data_meta[,1])){stop("unmatched sample name/colun names")}
@@ -969,15 +706,21 @@ PCA_wrapper_mixOmics <- function(data_matrix = NULL, data_meta = NULL, inputatio
 
   # take the values from the input
   X <- as.matrix(t(data_matrix))
-  Y <- data_meta[,2]
+  Y <- as.data.frame(data_meta)[,2]
 
   # filter and imputat the mising value
   if(inputation){
     X <- tidy_IntensityMarix_process(X, Q = Q, Imputation = TRUE)
   }
 
+
+  if(ncomp > ncol(data_matrix)){
+    ncomp <-  ncol(data_matrix)
+  }
+
   # this part could be done by any method
-  my.pca <- mixOmics::pca(X, ncomp = 10, center = TRUE, scale = TRUE)
+
+  my.pca <- mixOmics::pca(X, ncomp = ncomp, center = TRUE, scale = TRUE)
 
   PCA_analysis <- PCA_post_analysis(my.pca, Y)
 
@@ -992,71 +735,6 @@ PCA_wrapper_mixOmics <- function(data_matrix = NULL, data_meta = NULL, inputatio
 
 
 
-# using prcomp as the method to do pca then plot
-# test: matrix_test and meta_test are the dataset generated in this manual
-# p <- PCA_wrapper_prcomp(data_matrix = matrix_test, data_meta = meta_test, inputation = TRUE, Q = 0.75)
-# the 3D interactive plot might not work on some terminals
-
-
-PCA_wrapper_prcomp <- function(data_matrix, data_meta, inputation = TRUE, Q = 0.75){
-
-  suppressMessages(install.packages.auto(ggplot2))
-  suppressMessages(install.packages.auto(ggfortify))# for autoplot
-
-  data_matrix_t<-t(data_matrix)
-
-  # filter and imputat the mising value (including 0)
-  if(inputation){
-    data_matrix_t <- tidy_IntensityMarix_process(data_matrix_t, Q = Q, Imputation = TRUE)
-  }
-
-  PCA_result <- prcomp(data_matrix_t)
-
-  # scree plot
-  pca_Scree <- PCA_Screeplot_2(prcomp_out = PCA_result)$Scree.plot
-
-  if(missing(data_meta)){ # if there is no data_meta
-    pca_component <- autoplot(PCA_result, label = TRUE )
-    pca_component <- pca_component+labs(title = "PCA Clustering")+ theme_bw()+theme(plot.title = element_text(hjust = 0.5))
-
-    return(list(pca_result = PCA_result,
-                pca_component_plot = pca_component,
-                pca_scree_plot = pca_Scree
-    ))
-
-  }else{
-    # reorder the meta (grouping information)
-    data_meta <- data_meta[match(colnames(data_matrix), data_meta[,1]),]
-    row.names(data_meta) <- data_meta[,1] # this is only for proper labeling
-    colnames(data_meta) <- c("Sample.name", "grouping")
-
-    # check the order
-    if(any(colnames(data_matrix) !=  data_meta[,1])){stop("unmatched sample name/colun names")}
-
-    pca_component <- autoplot(PCA_result, data = data_meta, colour = "grouping", label = TRUE)
-    pca_component <- pca_component+labs(title = "PCA Clustering")+ theme_bw()+theme(plot.title = element_text(hjust = 0.5))
-
-
-    pca_kmeans <- PCA_plot_with_ellipse_kmeans_2(prcomp_out = PCA_result, grouping = data_meta)
-
-    pca_3d <- PCA_plot_3d_interactive_3(prcomp_out = PCA_result, grouping = data_meta)
-
-    pca_confidence <- PCA_plot_with_confidence_2(prcomp_out = PCA_result, data_meta = data_meta)
-
-
-    return(list(pca_result = PCA_result,
-                pca_component_plot = pca_component,
-                pca_component_plot_kmeans = pca_kmeans,
-                pca_component_plot_3d_interactive = pca_3d,
-                pca_confidence = pca_confidence,
-                pca_scree_plot = pca_Scree
-    ))
-
-  }
-
-}
-
-
 
 
 #________________________________________________________________________________________
@@ -1069,11 +747,12 @@ PCA_wrapper_prcomp <- function(data_matrix, data_meta, inputation = TRUE, Q = 0.
 
 # will do sequential KNN using rrcovNA::impSeqRob
 
-PCA_PLSDA_wrapper <- function(data_matrix = NULL, data_meta = NULL, inputation = TRUE, Q = 0.75, VIP_threshold = 1){
+PCA_PLSDA_wrapper <- function(data_matrix = NULL, data_meta = NULL, ncomp = 10, inputation = TRUE, Q = 0.75, VIP_threshold = 1){
   suppressMessages(install.packages.auto(mixOmics))
 
+  rownames(data_matrix) <- 1:nrow(data_matrix)
   # reorder the meta (grouping information)
-  data_meta <- data_meta[match(colnames(data_matrix), data_meta[,1]),]
+  data_meta <- data_meta[match(colnames(data_matrix), as.data.frame(data_meta)[,1]),] # revised @201906013
 
   # check the order
   if(any(colnames(data_matrix) !=  data_meta[,1])){stop("unmatched sample name/colun names")}
@@ -1081,15 +760,22 @@ PCA_PLSDA_wrapper <- function(data_matrix = NULL, data_meta = NULL, inputation =
 
   # take the values from the input
   X <- as.matrix(t(data_matrix))
-  Y <- data_meta[,2]
+  Y <- as.data.frame(data_meta)[,2]# revised @201906013
 
   # filter and imputat the mising value
   if(inputation){
     X <- tidy_IntensityMarix_process(X, Q = Q, Imputation = TRUE)
   }
 
+
+  if(ncomp > ncol(data_matrix)){
+    ncomp <-  ncol(data_matrix)
+  }
+
+
+
   # this part could be done by any method
-  my.pca <- mixOmics::pca(X, ncomp = 10, center = TRUE, scale = TRUE)
+  my.pca <- mixOmics::pca(X, ncomp = ncomp, center = TRUE, scale = TRUE)
   PCA_analysis<-PCA_post_analysis(my.pca, Y)
 
   # this is the plsda part, start a model, then test, how many component is good
@@ -1105,7 +791,8 @@ PCA_PLSDA_wrapper <- function(data_matrix = NULL, data_meta = NULL, inputation =
     plot_PLSDA_AUC = PLSDA_analysis$plot_auc,
     plot_PLSDA_VIP = PLSDA_analysis$plot_vip_distribution,
     plot_PLSDA_VIP_heatmap = PLSDA_analysis$plot_vip_filtered_variables,
-    data_PLSDA_VIP = t(PLSDA_analysis$vip.filtered.variables)
+    data_PLSDA_VIP_filtered_features = t(PLSDA_analysis$vip.filtered.variables),
+    data_PLSDA_VIP =  PLSDA_analysis$vip.all
   ))
 
 }
@@ -1200,10 +887,9 @@ PLSDA_CrossValication <-function(result_plsda, validation = "Mfold", folds =5, n
 
 
 # Postprocess of PSLDA
-PLSDA_post_analysis<-function(X, result.plsda, VIP_threshold = 1){
+PLSDA_post_analysis<-function(X, my.plsda, VIP_threshold = 1){
   suppressMessages(install.packages.auto(mixOmics))
   # ploting and output
-  my.plsda<-result.plsda
   Y<-my.plsda$Y
 
   postscript("temp")
@@ -1211,6 +897,7 @@ PLSDA_post_analysis<-function(X, result.plsda, VIP_threshold = 1){
   plotIndiv(my.plsda, comp = c(1, 2), ind.names = TRUE,  group = Y, ellipse = TRUE,legend = TRUE, title = 'PLSDA plot, Comp 1 - 2')
   p1 <- recordPlot()
   dev.off()
+
 
   my.side.color <- color.mixo(as.numeric(Y))
 
@@ -1239,15 +926,21 @@ PLSDA_post_analysis<-function(X, result.plsda, VIP_threshold = 1){
 
   # filter vips, keeping >1, and ouput all the corresponding features/variables
   my.vip.filtered <- my.vip[my.vip[,1]> VIP_threshold,]
-  my.vip.filtered <- my.vip.filtered[order(my.vip.filtered[,1]),]
-  my.vip.filtered.variables <- X[,row.names(my.vip.filtered)]
+  my.vip.filtered <- my.vip.filtered[order(my.vip.filtered[,1], decreasing = TRUE),]
+  my.vip.filtered.variables <- X[,as.numeric(row.names(my.vip.filtered))]
   #write.table(my.vip.filtered.variables,"Out_ProteinGroups_filtered_VIP.txt",sep="\t",row.names = TRUE,col.names = NA)
 
   # plot the heatmap of the orginal features
   my.vip.filtered.variables.scaled<-scale(my.vip.filtered.variables)
   postscript("temp")
   dev.control('enable')
-  cim(my.vip.filtered.variables.scaled, row.sideColors = my.side.color, row.names = Y, col.names = FALSE,row.cex = 0.5, scale = TRUE, center =TRUE)
+  cim(my.vip.filtered.variables.scaled,
+      row.sideColors = my.side.color,
+      row.names = Y,
+      col.names = FALSE,
+      row.cex = 0.5,
+      scale = TRUE,
+      center =TRUE)
   p5 <- recordPlot()
   dev.off()
 
@@ -1518,16 +1211,25 @@ IntensityMarix_process<-function(IntensityMarix, threshold = 1, Imputation = TRU
   ))
 }
 
+
+# 20181002 fix a bug for filtering out rows, originally it was applied on columns
+
 tidy_IntensityMarix_process<-function(IntensityMarix, Q = 0.75, Imputation = TRUE){
   suppressMessages(install.packages.auto(rrcovNA))
 
-  IntensityMarix<-IntensityMarix[,colSums(IntensityMarix == 0) < (nrow(IntensityMarix)*(1-Q))]
+  # IntensityMarix<-IntensityMarix[,rowSums(IntensityMarix == 0) < (ncol(IntensityMarix)*(1-Q))]
+
+  # filter out rows with too many missing values
+  IntensityMarix  <- IntensityMarix[rowSums(is.na(IntensityMarix)) <= ncol(IntensityMarix)*(1-Q) , ]
+
   IntensityMarix<-log10(IntensityMarix)
   IntensityMarix[IntensityMarix==-Inf]<-NA
   if(Imputation=="TRUE"){
-    IntensityMarix<-t(rrcovNA::impSeqRob(t(IntensityMarix))$x) # now is a inputed(log10(LFQintensity))
+    IntensityMarix<-t(rrcovNA::impSeqRob(t(IntensityMarix))$x)
   }
-  IntensityMarix
+  IntensityMarix # now is a inputed(log10(intensity)), items with too many missing values ware filtered out
+  # intensity matrix is a data.frame, with raw intensity (without log transformation) with column as samples, and row as items
+  # Q is the Q cutoff for percentatage of missing value filtering, 0.75 means items with 75% of msising value will be filtered out
 }
 
 

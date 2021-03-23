@@ -11,7 +11,7 @@ ternary_plot_matrix(data_matrix, data_meta, three_points)
 
 \item{data_meta}{a dataframe with sample-group matching}
 
-\item{three_points}{could be "top3",or a vector of row index, or a vector of row names. If vector, the length must be 3. see examples}
+\item{three_points}{could be "top3", or a vector of row index, or a vector of row names. If vector, the length must be 3. see examples}
 }
 \value{
 a data.frame of matrix_selected and ggplot2 object of ternary.plot

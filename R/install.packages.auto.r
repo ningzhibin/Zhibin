@@ -5,7 +5,7 @@
 #' It also does not need quote on the package name.
 #'
 #' This function is just for quick and easy install and library usage. It does not consider installation from github yet.
-#' If the pacakge has already been installed, no installation will be proceeded.
+#' If the target pacakge has already been installed, no installation will be proceeded.
 #' With R version 3.5 or greater, Bioconductor packages installing start using BiocManager. Therefore this comand only woorks for biocondcutior for R 3.5 or greater
 #'
 #' @param x package name, with or without the quote both works
@@ -45,10 +45,18 @@ install.packages.auto <- function(x) {
     if (!requireNamespace("BiocManager", quietly = TRUE))
       install.packages("BiocManager")
 
-    BiocManager::install("clusterProfiler")
-
     #biocLite(character(), ask=FALSE) #update installed packages.
     eval(parse(text = sprintf("BiocManager::install(\"%s\")", x)))
     eval(parse(text = sprintf("require(\"%s\")", x)))
   }
+
+
+  # for github
+  # if(isTRUE("metalab" %in% .packages(all.available=TRUE))) {
+  #   eval(parse(text = sprintf("require(\"%s\")", "metalab")))
+  # } else {
+  #   eval(parse(text = sprintf("install_github(\"%s\", dependencies = TRUE)", "ningzhibin/metalab")))
+  # }
+
+
 }
